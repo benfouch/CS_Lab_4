@@ -1,11 +1,11 @@
 """
-- NOTE: REPLACE 'N' Below with your section, year, and lab number
-- CS2911 - 0NN
-- Fall 202N
-- Lab N
+- CS2911 - 011
+- Fall 2021
+- Lab 4
 - Names:
-  -
-  -
+  - Ben Fouch
+  - Nate Cernik
+  - Aiden Regan
 
 A simple TCP server/client pair.
 
@@ -20,15 +20,14 @@ Then the client can send the next file.
 
 
 Introduction: (Describe the lab in your own words)
-
-
-
+This lab is to help us understand message sending/receiving in python.
+We use TCP protocol to send messages to another computer, and that computer will write out the message to a text file
+Both the sender and receiver will have to listen for responses from each other, and the program should not end until the
+sender passes message with 0 lines
 
 Summary: (Summarize your experience with the lab, what you learned, what you liked, what you disliked, and any suggestions you have for improvement)
-
-
-
-
+We think the lab was great! It was a fun push of our understanding of the concept. It took a bit to understand how we
+could accomplish what we had to do but it was fun to get to a solution
 """
 
 # import the 'socket' module -- not using 'from socket import *' in order to selectively use items with 'socket.' prefix
@@ -36,8 +35,6 @@ import socket
 import struct
 import time
 import sys
-
-global filename
 
 # Port number definitions
 # (May have to be adjusted if they collide with ports in use by other programs/services.)
@@ -130,8 +127,9 @@ def tcp_receive(listen_port):
     - Close data connection.
 
     :param int listen_port: Port number on the server to listen on
+    :author Nate Cernik, Ben Fouch, Aiden Regan
     """
-
+    num_runs = 0
     print('tcp_receive (server): listen_port={0}'.format(listen_port))
     listen_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     listen_socket.bind((LISTEN_ON_INTERFACE, listen_port))
@@ -140,16 +138,17 @@ def tcp_receive(listen_port):
     print(sender_address)
     num_lines = number_of_lines(data_socket)
 
-    # while num_lines != 0:
-    if num_lines == 0:
-        data_socket.sendall(b'Q')
-    else:
-        message_reader(data_socket, num_lines)
+    while num_lines != 0:
+        num_runs += 1
+        message_reader(data_socket, num_lines, num_runs)
         data_socket.sendall(b'A')
         num_lines = number_of_lines(data_socket)
 
+    if num_lines == 0:
+        data_socket.sendall(b'Q')
+    listen_socket.close()
+    data_socket.close()
 
-# Add more methods here (Delete this line)
 
 def number_of_lines(data_socket):
     """
@@ -157,7 +156,7 @@ def number_of_lines(data_socket):
     that the code \x0a can be read in the message before it quits
     :param data_socket:
     :return: returns the number of times \x0a can be read
-    author: Tyler Cernik
+    :author Nate Cernik
     """
     byte_counter = b''
     for x in range(0, 4):
@@ -165,16 +164,17 @@ def number_of_lines(data_socket):
     return int.from_bytes(byte_counter, 'big')
 
 
-def message_reader(data_socket, num_lines):
+def message_reader(data_socket, num_lines, num_runs):
     """
     This method uses the number_of_lines() method to get the number of times to read \x0a in the file, and then
     reads the message from the client. It then creates a text file with the sent message in proper format
+    :param num_runs:
     :param data_socket: Data socket
     :param num_lines: number times the reader can read \x0a
     :return: writes the message to a file
+    :author Nate Cernik, Ben Fouch, Aiden Regan
     """
 
-    global filename
     byte_message = b''
 
     while num_lines > 0:
@@ -184,13 +184,10 @@ def message_reader(data_socket, num_lines):
             num_lines -= 1
     print(byte_message.decode())
 
-
-"""
-    f = open((str(filename) + '.txt'), 'w+')
+    f = open((str(num_runs) + '.txt'), 'w+')
     f.write(byte_message.decode('ASCII'))
     f.close()
-    filename += 1
-"""
+    num_runs += 1
 
 
 def next_byte(data_socket):
